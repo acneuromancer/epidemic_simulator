@@ -90,7 +90,7 @@ def draw(people):
     if _count_infected_people == 0:
         pause = True
         
-    font = pygame.font.SysFont("Arial", 30)
+    font = pygame.font.SysFont("Arial", 25)
     text = font.render("Active cases: " + str(_count_infected_people), True, (200, 200, 200))
     textRect = text.get_rect()
     textRect.left = 10
@@ -99,15 +99,20 @@ def draw(people):
     
     text = font.render("Budget: " + str(BUDGET), True, (200, 200, 200))
     textRect = text.get_rect()
-    textRect.left = 450
+    textRect.left = 400
     textRect.top = 10
     screen.blit(text, textRect)
     
-    text = font.render("Time: " + str(time), True, (200, 200, 200))
+    text = font.render("Clear:        Infected:        Immune:        Mask:", True, (200, 200, 200))
     textRect = text.get_rect()
-    textRect.left = 250
+    textRect.left = 700
     textRect.top = 10
     screen.blit(text, textRect)
+    
+    pygame.draw.circle(screen, PERSON_COLOR_CLEAR, (790, 23), PERSON_AURA-10, 0)
+    pygame.draw.circle(screen, PERSON_COLOR_INFECTED, (940, 23), PERSON_AURA-10, 0)
+    pygame.draw.circle(screen, PERSON_COLOR_IMMUNE, (1100, 23), PERSON_AURA-10, 0)
+    pygame.draw.circle(screen, PERSON_COLOR_CLEAR, (1220, 23), PERSON_AURA-10, 5)
     
     pygame.display.update()
     fps.tick(PERSON_SPEED)
