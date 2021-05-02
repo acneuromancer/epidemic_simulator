@@ -2,7 +2,6 @@
 # python3 -m venv env
 # source /env/bin/activate
 
-
 import pygame
 import sys
 from random import randint
@@ -19,7 +18,9 @@ ILLNESS_TIME = 500
 IMMUNE_TIME = 800
 INFECTION_PROBABILITY_WITH_MASK = 50
 INFECTION_PROBABILITY_WITHOUT_MASK = 2
-FIRST_CONTACT = 2
+FIRST_CONTACT = 1
+BUDGET = 2000
+VACCINE_PRICE = 50
 
 # Initialization
 pygame.init()
@@ -27,7 +28,7 @@ screen = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Epidemic Simulator 1.0")
 fps = pygame.time.Clock()
 pause = False
-
+time = 0
 
 # Person class
 class Person:
@@ -40,7 +41,6 @@ class Person:
         self.illness = 0
         self.immune = 0
         self.mask = False
-        
 
     def move(self):
         if randint(1, 30) == 1:
@@ -49,7 +49,7 @@ class Person:
             self.dy = randint(-1, 1)
         if PERSON_AURA < self.x + self.dx < WIDTH - PERSON_AURA:
             self.x += self.dx
-        if PERSON_AURA < self.y + self.dy < HEIGHT - PERSON_AURA:
+        if PERSON_AURA + 50 < self.y + self.dy < HEIGHT - PERSON_AURA:
             self.y += self.dy
     
     def cure(self):
@@ -62,6 +62,9 @@ class Person:
             
 
 def draw(people):
+    global pause
+    _count_infected_people = 0
+    
     screen.fill((0, 0, 100))
     
     for person in people:
@@ -72,6 +75,24 @@ def draw(people):
         else:
             _color = PERSON_COLOR_CLEAR
         pygame.draw.circle(screen, _color, (person.x, person.y), PERSON_AURA, 0)
+        if person.illness > 0:
+            _count_infected_people += 1
+    
+    if _count_infected_people == 0:
+        pause = True
+        
+    font = pygame.font.SysFont("Arial", 30)
+    text = font.render("Active cases: " + str(_count_infected_people), True, (200, 200, 200))
+    textRect = text.get_rect()
+    textRect.left = 10
+    textRect.top = 10
+    screen.blit(text, textRect)
+    
+    text = font.render("Time: " + str(time), True, (200, 200, 200))
+    textRect = text.get_rect()
+    textRect.left = 250
+    textRect.top = 10
+    screen.blit(text, textRect) 
     
     pygame.display.update()
     fps.tick(PERSON_SPEED)
@@ -91,7 +112,21 @@ def modify(people):
                         else:
                             if randint(1, INFECTION_PROBABILITY_WITHOUT_MASK) == 1:
                                 person.illness = ILLNESS_TIME
-        
+
+def vaccine(people, pos):
+    global BUDGET
+    
+    for person in people:
+        if person.x - PERSON_AURA < pos[0] < person.x + PERSON_AURA \
+            and person.y - PERSON_AURA < pos[1] < person.y + PERSON_AURA:
+            if person.illness == 0 and person.immune == 0:
+                if BUDGET >= VACCINE_PRICE:
+                    person.immune = IMMUNE_TIME
+                    BUDGET -= VACCINE_PRICE
+
+def mask(people, pos):
+    pass
+    
 # Create people
 main_people_list = [Person(randint(50, WIDTH - 50), randint(50, HEIGHT - 50))
                     for i in range(NUMBER_OF_PEOPLE)]
@@ -109,7 +144,14 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 pause = not pause
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == pygame.BUTTON_LEFT:
+                vaccine(main_people_list, pygame.mouse.get_pos())
+            if event.button == pygame.BUTTON_RIGHT:
+                mask(main_people_list, pygame.mouset.get_pos())
 
     if not pause:
         draw(main_people_list)
         modify(main_people_list)
+        time += 1
+        
