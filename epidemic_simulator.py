@@ -21,6 +21,7 @@ INFECTION_PROBABILITY_WITHOUT_MASK = 2
 FIRST_CONTACT = 1
 BUDGET = 2000
 VACCINE_PRICE = 50
+MASK_PRICE = 50
 
 # Initialization
 pygame.init()
@@ -68,13 +69,21 @@ def draw(people):
     screen.fill((0, 0, 100))
     
     for person in people:
+        _mask = 0
         if person.illness > 0:
             _color = PERSON_COLOR_INFECTED
+            if person.mask:
+                _mask = 5
         elif person.immune > 0:
             _color = PERSON_COLOR_IMMUNE
+            if person.mask:
+                _mask = 5
         else:
             _color = PERSON_COLOR_CLEAR
-        pygame.draw.circle(screen, _color, (person.x, person.y), PERSON_AURA, 0)
+            if person.mask:
+                _mask = 5
+                
+        pygame.draw.circle(screen, _color, (person.x, person.y), PERSON_AURA, _mask)
         if person.illness > 0:
             _count_infected_people += 1
     
@@ -88,11 +97,17 @@ def draw(people):
     textRect.top = 10
     screen.blit(text, textRect)
     
+    text = font.render("Budget: " + str(BUDGET), True, (200, 200, 200))
+    textRect = text.get_rect()
+    textRect.left = 450
+    textRect.top = 10
+    screen.blit(text, textRect)
+    
     text = font.render("Time: " + str(time), True, (200, 200, 200))
     textRect = text.get_rect()
     textRect.left = 250
     textRect.top = 10
-    screen.blit(text, textRect) 
+    screen.blit(text, textRect)
     
     pygame.display.update()
     fps.tick(PERSON_SPEED)
@@ -125,8 +140,17 @@ def vaccine(people, pos):
                     BUDGET -= VACCINE_PRICE
 
 def mask(people, pos):
-    pass
+    global BUDGET
     
+    for person in people:
+        if person.x - PERSON_AURA < pos[0] < person.x + PERSON_AURA \
+            and person.y - PERSON_AURA < pos[1] < person.y + PERSON_AURA:
+            if person.mask == 0 and BUDGET >= MASK_PRICE:
+                person.mask = True
+                BUDGET -= MASK_PRICE
+            else:
+                person.mask = False
+                
 # Create people
 main_people_list = [Person(randint(50, WIDTH - 50), randint(50, HEIGHT - 50))
                     for i in range(NUMBER_OF_PEOPLE)]
@@ -148,7 +172,7 @@ while True:
             if event.button == pygame.BUTTON_LEFT:
                 vaccine(main_people_list, pygame.mouse.get_pos())
             if event.button == pygame.BUTTON_RIGHT:
-                mask(main_people_list, pygame.mouset.get_pos())
+                mask(main_people_list, pygame.mouse.get_pos())
 
     if not pause:
         draw(main_people_list)
